@@ -5,18 +5,21 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/oliveirabalsa/2tp-management-backend/models"
 	"github.com/oliveirabalsa/2tp-management-backend/services"
 )
 
 func CreateBoard(c *gin.Context) {
-	var board models.Board
-	if err := c.ShouldBindJSON(&board); err != nil {
+	type BoardInput struct {
+		Title string `json:"title" binding:"required"`
+	}
+
+	var input BoardInput
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request data"})
 		return
 	}
-
-	fmt.Printf("Received Board Data: %+v\n", board)
 
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -24,9 +27,22 @@ func CreateBoard(c *gin.Context) {
 		return
 	}
 
-	board.AdminID = userID.(uint)
+	// Get user to check role
+	user, err := services.GetUserByID(userID.(uuid.UUID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch user details"})
+		return
+	}
 
-	fmt.Println("Assigned Admin ID:", board.AdminID)
+	if user.Role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only admins can create boards"})
+		return
+	}
+
+	board := models.Board{
+		Title:   input.Title,
+		AdminID: userID.(uuid.UUID),
+	}
 
 	if err := services.CreateBoardService(&board); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create board"})

@@ -10,4 +10,6 @@ func TaskRoutes(router *gin.Engine) {
 	router.POST("/api/tasks", middleware.AuthMiddleware(), controllers.CreateTask)
 	router.GET("/api/columns/:column_id/tasks", controllers.GetTasksByColumn)
 	router.DELETE("/api/tasks/:task_id", controllers.DeleteTask)
+	router.PUT("/api/tasks/:task_id", controllers.UpdateTask)
+	router.GET("/api/tasks/:task_id", controllers.GetTaskByID)
 }

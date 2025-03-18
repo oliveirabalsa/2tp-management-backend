@@ -1,8 +1,7 @@
 package repositories
 
 import (
-	"fmt"
-
+	"github.com/google/uuid"
 	"github.com/oliveirabalsa/2tp-management-backend/config"
 	"github.com/oliveirabalsa/2tp-management-backend/models"
 )
@@ -17,9 +16,8 @@ func GetBoards() ([]models.Board, error) {
 	return boards, err
 }
 
-func BoardExists(boardID uint) bool {
+func BoardExists(boardID uuid.UUID) bool {
 	var board models.Board
 	config.DB.First(&board, boardID)
-	fmt.Println(board)
-	return board.ID != 0
+	return board.ID != uuid.Nil
 }

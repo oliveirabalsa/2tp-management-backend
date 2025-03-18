@@ -2,18 +2,27 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/oliveirabalsa/2tp-management-backend/models"
 	"github.com/oliveirabalsa/2tp-management-backend/services"
 )
 
 func CreateColumn(c *gin.Context) {
-	var column models.Column
-	if err := c.ShouldBindJSON(&column); err != nil {
+	var input struct {
+		Title   string    `json:"title" binding:"required"`
+		BoardID uuid.UUID `json:"board_id" binding:"required"`
+	}
+
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	column := models.Column{
+		Title:   input.Title,
+		BoardID: input.BoardID,
 	}
 
 	if err := services.CreateColumnService(&column); err != nil {
@@ -25,13 +34,13 @@ func CreateColumn(c *gin.Context) {
 }
 
 func GetColumnsByBoard(c *gin.Context) {
-	boardID, err := strconv.ParseUint(c.Param("board_id"), 10, 32)
+	boardID, err := uuid.Parse(c.Param("board_id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid board ID"})
 		return
 	}
 
-	columns, err := services.GetBoardColumns(uint(boardID))
+	columns, err := services.GetBoardColumns(boardID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not fetch columns"})
 		return
@@ -41,13 +50,13 @@ func GetColumnsByBoard(c *gin.Context) {
 }
 
 func DeleteColumn(c *gin.Context) {
-	columnID, err := strconv.ParseUint(c.Param("column_id"), 10, 32)
+	columnUUID, err := uuid.Parse(c.Param("column_id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid column ID"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid column ID format"})
 		return
 	}
 
-	if err := services.DeleteColumnService(uint(columnID)); err != nil {
+	if err := services.DeleteColumnService(columnUUID); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete column"})
 		return
 	}

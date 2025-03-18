@@ -1,10 +1,12 @@
 package config
 
 import (
+	"log"
+
+	"github.com/google/uuid"
 	"github.com/oliveirabalsa/2tp-management-backend/models"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
-	"log"
 )
 
 var DB *gorm.DB
@@ -15,6 +17,15 @@ func ConnectDatabase() {
 	if err != nil {
 		log.Fatal("Failed to connect to database: ", err)
 	}
+
+	// Register callback for UUID generation
+	DB.Callback().Create().Before("gorm:create").Register("generate_uuid", func(db *gorm.DB) {
+		if model, ok := db.Statement.Dest.(interface{ GetID() uuid.UUID }); ok {
+			if model.GetID() == uuid.Nil {
+				db.Statement.SetColumn("ID", uuid.New())
+			}
+		}
+	})
 
 	DB.Exec("PRAGMA journal_mode=WAL;")
 

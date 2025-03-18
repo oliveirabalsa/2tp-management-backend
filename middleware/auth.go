@@ -9,13 +9,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 )
 
 type Claims struct {
-	UserID   uint   `json:"user_id"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	UserID   uuid.UUID `json:"user_id"`
+	Username string    `json:"username"`
+	Role     string    `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -33,7 +34,7 @@ func init() {
 	}
 }
 
-func GenerateJWT(userID uint, username string, role string) (string, error) {
+func GenerateJWT(userID uuid.UUID, username string, role string) (string, error) {
 	expirationTime := time.Now().Add(time.Hour * 24)
 
 	claims := Claims{
@@ -81,10 +82,6 @@ func AuthMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-
-		fmt.Println("Extracted UserID:", claims.UserID)
-		fmt.Println("Extracted Username:", claims.Username)
-		fmt.Println("Extracted Role:", claims.Role)
 
 		c.Set("user_id", claims.UserID)
 		c.Set("username", claims.Username)
