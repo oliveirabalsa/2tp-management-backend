@@ -64,8 +64,6 @@ func Login(c *gin.Context) {
 		return
 	}
 
-		credentials.Username, len(credentials.Password))
-
 	token, err := services.AuthenticateUser(credentials.Username, credentials.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
